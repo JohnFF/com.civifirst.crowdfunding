@@ -149,3 +149,42 @@ function crowdfunding_civicrm_navigationMenu(&$menu) {
   ));
   _crowdfunding_civix_navigationMenu($menu);
 } // */
+
+/**
+ * When Contributions are created, edited, or deleted, this can impact our goal.
+ *
+ * @return void
+ */
+function crowdfunding_civicrm_post($op, $objectName, $objectId, &$objectRef) {
+  if ($objectName != 'Contribute') {
+    return;
+  }
+
+  // Probably no need to fire on $op == 'create' as our custom fields won't exist then.
+  if (!in_array($op, array('create', 'edit', 'delete'))) {
+    return;
+  }
+
+  $crowdfunding = new CRM_Crowdfunding();
+  $crowdfunding->onContributionUpdate($objectId);
+}
+
+/**
+ * CiviCRM has a quirk whereby, on creating entities, the post hook is called
+ * before the custom fields are added. So we call this hook to cover for it.
+ *
+ * @return void
+ */
+function crowdfunding_civicrm_custom($op, $groupID, $entityID, &$params) {
+  if (!in_array($op, array('create', 'edit', 'delete'))) {
+    return;
+  }
+  foreach ($params as $eachParam) {
+    if ($eachParam['column_name'] != 'parent_contribution_id') {
+      return;
+    }
+
+    $crowdfunding = new CRM_Crowdfunding();
+    $crowdfunding->onContributionCustomUpdate($eachParam['value']);
+  }
+}

@@ -40,12 +40,12 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
 
     $iCollector = civicrm_api3('Contact', 'create', array(
       'contact_type' => 'Individual',
-      'email' => 'testcollector@example.org'
+      'email' => 'testcollector@example.org',
     ));
 
     $iDonor = civicrm_api3('Contact', 'create', array(
       'contact_type' => 'Individual',
-      'email' => 'testdonor@example.org'
+      'email' => 'testdonor@example.org',
     ));
 
     $parentContribution = civicrm_api3('Contribution', 'create', array(
@@ -59,7 +59,7 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
     $apiFieldName = CRM_Crowdfunding::getApiFieldName();
 
     // Add enough payments to exceed the needed amount.
-    for($iPayment = 0; $iPayment < 3; $iPayment++) {
+    for ($iPayment = 0; $iPayment < 3; $iPayment++) {
       civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
         'total_amount' => "15.00",
@@ -88,13 +88,13 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
 
     $iDonor = civicrm_api3('Contact', 'create', array(
       'contact_type' => 'Individual',
-      'email' => 'testcollector@example.org'
+      'email' => 'testcollector@example.org',
     ));
 
     $apiFieldName = CRM_Crowdfunding::getApiFieldName();
 
     // Add enough payments to exceed the needed amount.
-    for($iPayment = 0; $iPayment < 3; $iPayment++) {
+    for ($iPayment = 0; $iPayment < 3; $iPayment++) {
       $newDonation = civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
         'total_amount' => "15.00",
@@ -118,9 +118,9 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
   public static function createTestPaidParticipant() {
     $iCollector = civicrm_api3('Contact', 'create', array(
       'contact_type' => 'Individual',
-      'email' => 'testcollector@example.org'
+      'email' => 'testcollector@example.org',
     ));
-    
+
     $event = civicrm_api3('Event', 'create', array(
       'sequential' => 1,
       'event_type_id' => "Exhibition",
@@ -207,6 +207,5 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       'contribution_id' => $contribution['id'],
     );
   }
-
 
 }
