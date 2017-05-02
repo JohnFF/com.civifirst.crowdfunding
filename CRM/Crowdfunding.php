@@ -7,18 +7,18 @@ class CRM_Crowdfunding {
     $this->apiParentContributionIdFieldId = self::getApiFieldName();
   }
 
-  private function refreshParentContributionStatus($parentContributeId) {
+  private function refreshParentContributionStatus($parentContributionId) {
     
     $parentContributionGoal = civicrm_api3('Contribution', 'getvalue', array(
       'sequential' => 1,
       'return' => 'total_amount',
-      'id'=> $parentContributeId,
+      'id' => $parentContributionId,
     ));
 
     $childContributions = civicrm_api3('Contribution', 'get', array(
       'sequential' => 1,
       'return' => array('total_amount'),
-      $this->apiParentContributionIdFieldId => $parentContributeId,
+      $this->apiParentContributionIdFieldId = $parentContributionId,
     ));
 
     $childContributionsTotal = 0;
@@ -30,23 +30,32 @@ class CRM_Crowdfunding {
     if ($childContributionsTotal == 0) {
       civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
-        'id' => $parentContributeId,
+        'id' => $parentContributionId,
         'contribution_status_id' => "Pending",
       ));
     }
     elseif ($childContributionsTotal < $parentContributionGoal) {
       civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
-        'id' => $parentContributeId,
+        'id' => $parentContributionId,
         'contribution_status_id' => "Partially paid",
       ));
     }
     else {
       civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
-        'id' => $parentContributeId,
+        'id' => $parentContributionId,
         'contribution_status_id' => "Completed",
       ));
+
+      // Update Participants if needed.
+      $participantStatuses = CRM_Event_PseudoConstant::participantStatus();
+      $ids = CRM_Event_BAO_Participant::getParticipantIds($parentContributionId);
+      foreach ($ids as $val) {
+        $participantUpdate['id'] = $val;
+        $participantUpdate['status_id'] = array_search('Registered', $participantStatuses);
+        CRM_Event_BAO_Participant::add($participantUpdate);
+      }
     }
   }
 

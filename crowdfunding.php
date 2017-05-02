@@ -179,6 +179,7 @@ function crowdfunding_civicrm_custom($op, $groupID, $entityID, &$params) {
   if (!in_array($op, array('create', 'edit', 'delete'))) {
     return;
   }
+
   foreach ($params as $eachParam) {
     if ($eachParam['column_name'] != 'parent_contribution_id') {
       return;
