@@ -2,7 +2,7 @@
 <extension key="com.civifirst.crowdfunding" type="module">
   <file>crowdfunding</file>
   <name>Crowd Funding</name>
-  <description>Provides a 'Parent Contribution Id' for Contributions. Updates Parent Contribution statuses when their Child Contributions are completed.</description>
+  <description>Provides a 'Parent Contribution Id' for Contributions. This is ued to updates Parent Contribution statuses when their Child Contributions are completed. To use this: 1. Create a profile containing the Crowd Funding custom fields. 2. Add it to any Contribution page that you want to enable Crowd Funding on. 3. In Manage ACLs, add permissions for 'view custom field' on Crowd Funding and 'create profile' on Crowd Funding. 4. Add &parent_contribution_id={id} to the URL of any Contribute page. 5. In your template for that page you probably want to hide the Crowd Funding section.</description>
   <license>AGPL-3.0</license>
   <maintainer>
     <author>John Kirk</author>
@@ -15,7 +15,7 @@
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2017-05-02</releaseDate>
-  <version>1.0</version>
+  <version>0.5</version>
   <develStage>alpha</develStage>
   <compatibility>
     <ver>4.7</ver>

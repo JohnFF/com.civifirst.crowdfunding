@@ -7,8 +7,13 @@ class CRM_Crowdfunding {
     $this->apiParentContributionIdFieldId = self::getApiFieldName();
   }
 
+  /**
+   * This updates the parent Contribution's status with the new data.
+   *
+   * @param int $parentContributionId
+   */
   private function refreshParentContributionStatus($parentContributionId) {
-    
+
     $parentContributionGoal = civicrm_api3('Contribution', 'getvalue', array(
       'sequential' => 1,
       'return' => 'total_amount',
@@ -24,28 +29,32 @@ class CRM_Crowdfunding {
     $childContributionsTotal = 0;
 
     foreach ($childContributions['values'] as $childContribution) {
+      // TODO check sub payments' status.
       $childContributionsTotal += $childContribution['total_amount'];
     }
 
-    if ($childContributionsTotal == 0) {
+    if ($childContributionsTotal <= 0) {
+      // There are no related payments, or the value is negative.
       civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
         'id' => $parentContributionId,
-        'contribution_status_id' => "Pending",
+        'contribution_status_id' => 'Pending',
       ));
     }
     elseif ($childContributionsTotal < $parentContributionGoal) {
+      // There are payments, but not enough.
       civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
         'id' => $parentContributionId,
-        'contribution_status_id' => "Partially paid",
+        'contribution_status_id' => 'Partially paid',
       ));
     }
     else {
+      // Paid in full, maybe in excess.
       civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
         'id' => $parentContributionId,
-        'contribution_status_id' => "Completed",
+        'contribution_status_id' => 'Completed',
       ));
 
       // Update Participants if needed.
@@ -59,6 +68,11 @@ class CRM_Crowdfunding {
     }
   }
 
+  /**
+   * When a Contribution is updated, use this functionality.
+   *
+   * @param int $contributeId
+   */
   public function onContributionUpdate($contributeId) {
     $apiParentIdFieldName = self::getApiFieldName();
     
@@ -73,10 +87,21 @@ class CRM_Crowdfunding {
     }
   }
 
+  /**
+   * In the case of a Crowd Funding custom field being updated, just recalculate
+   * the amount.
+   *
+   * @param int $contributeId
+   */
   public function onContributionCustomUpdate($contributeId) {
     $this->refreshParentContributionStatus($contributeId);
   }
 
+  /**
+   * Returns the parent Contribution Id's custom field's api key in the form custom_XYZ.
+   *
+   * @return string
+   */
   public static function getApiFieldName() {
     $parentContributionIdFieldId = civicrm_api3('CustomField', 'getvalue', array(
       'sequential' => 1,
