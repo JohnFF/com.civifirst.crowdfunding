@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * This class encapsulates the Crowd Funding functionality.
+ */
 class CRM_Crowdfunding {
   private $apiParentContributionIdFieldId;
 
@@ -22,15 +25,16 @@ class CRM_Crowdfunding {
 
     $childContributions = civicrm_api3('Contribution', 'get', array(
       'sequential' => 1,
-      'return' => array('total_amount'),
+      'return' => array('total_amount', 'contribution_status'),
       $this->apiParentContributionIdFieldId = $parentContributionId,
     ));
 
     $childContributionsTotal = 0;
 
     foreach ($childContributions['values'] as $childContribution) {
-      // TODO check sub payments' status.
-      $childContributionsTotal += $childContribution['total_amount'];
+      if ('completed' == $childContribution['contribution_status']) {
+        $childContributionsTotal += $childContribution['total_amount'];
+      }
     }
 
     if ($childContributionsTotal <= 0) {
