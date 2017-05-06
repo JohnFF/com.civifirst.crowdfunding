@@ -156,12 +156,12 @@ function crowdfunding_civicrm_navigationMenu(&$menu) {
  * @return void
  */
 function crowdfunding_civicrm_post($op, $objectName, $objectId, &$objectRef) {
-  if ($objectName != 'Contribute') {
+  if ($objectName != 'Contribution') {
     return;
   }
 
   // Probably no need to fire on $op == 'create' as our custom fields won't exist then.
-  if (!in_array($op, array('create', 'edit', 'delete'))) {
+  if (!in_array($op, array('edit', 'delete'))) {
     return;
   }
 

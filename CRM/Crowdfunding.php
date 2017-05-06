@@ -32,7 +32,7 @@ class CRM_Crowdfunding {
     $childContributionsTotal = 0;
 
     foreach ($childContributions['values'] as $childContribution) {
-      if ('completed' == $childContribution['contribution_status']) {
+      if ('Completed' == $childContribution['contribution_status']) {
         $childContributionsTotal += $childContribution['total_amount'];
       }
     }
@@ -87,7 +87,7 @@ class CRM_Crowdfunding {
     ));
 
     if (!empty($parentContributionId)) {
-     $this->refreshParentContributionStatus($parentContributeId);
+     $this->refreshParentContributionStatus($parentContributionId);
     }
   }
 
