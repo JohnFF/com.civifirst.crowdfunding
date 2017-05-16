@@ -59,7 +59,7 @@ class CRM_Crowdfunding {
    * @param string $newContributionStatus
    * @param float $totalAmount
    */
-  private function updateContributionStatus($parentContributionId, $newContributionStatus, $totalAmount) {
+  private function updateContributionStatus($parentContributionId, $newContributionStatus) {
     // TODO when this extension is enabled and the API is called, the API throws
     // an exception saying that 'total_amount' is required and missing. This is
     // even when it's present as below. Seemingly only through the interface,
@@ -67,7 +67,6 @@ class CRM_Crowdfunding {
     // civicrm_api3('Contribution', 'create', array(
     //   'id' => $parentContributionId,
     //   'contribution_status_id' => $newContributionStatus,
-    //   'total_amount' => $totalAmount,
     // ));
 
     $newContributionStatusId = civicrm_api3('OptionValue', 'getvalue', array(
@@ -111,7 +110,7 @@ class CRM_Crowdfunding {
     $childContributions = civicrm_api3('Contribution', 'get', array(
       'sequential' => 1,
       'return' => array('total_amount', 'contribution_status'),
-      $this->apiParentContributionIdFieldId = $parentContributionId,
+      $this->apiParentContributionIdFieldId => $parentContributionId,
     ));
 
     $childContributionsTotal = 0;
@@ -147,10 +146,10 @@ class CRM_Crowdfunding {
    * In the case of a Crowd Funding custom field being updated, just recalculate
    * the amount.
    *
-   * @param int $contributeId
+   * @param int $parentContributeId
    */
-  public function onContributionCustomUpdate($contributeId) {
-    $this->refreshParentContributionStatus($contributeId);
+  public function onContributionCustomUpdate($parentContributeId) {
+    $this->refreshParentContributionStatus($parentContributeId);
   }
 
   /**
