@@ -31,7 +31,7 @@ class CRM_Crowdfunding {
       // There are no related payments, or the value is negative.
       $newContributionStatus = 'Pending';
     }
-    elseif ($childContributionsTotal < $parentContributionDetails['contribution_status']) {
+    elseif ($childContributionsTotal < $parentContributionDetails['total_amount']) {
       // There are payments, but not enough.
       $newContributionStatus = 'Partially paid';
     }
@@ -60,29 +60,11 @@ class CRM_Crowdfunding {
    * @param float $totalAmount
    */
   private function updateContributionStatus($parentContributionId, $newContributionStatus) {
-    // TODO when this extension is enabled and the API is called, the API throws
-    // an exception saying that 'total_amount' is required and missing. This is
-    // even when it's present as below. Seemingly only through the interface,
-    // doesn't affect Unit Tests.
-    // civicrm_api3('Contribution', 'create', array(
-    //   'id' => $parentContributionId,
-    //   'contribution_status_id' => $newContributionStatus,
-    // ));
-
-    $newContributionStatusId = civicrm_api3('OptionValue', 'getvalue', array(
-      'sequential' => 1,
-      'return' => 'value',
-      'name' => $newContributionStatus,
-      'option_group_id' => 'contribution_status',
-    ));
-
-    $updateSql = 'UPDATE civicrm_contribution SET contribution_status_id = %1 WHERE id = %2';
-    $updateParams = array(
-      1 => array($newContributionStatusId, 'Integer'),
-      2 => array($parentContributionId, 'Integer'),
-    );
-
-    CRM_Core_DAO::executeQuery($updateSql, $updateParams);
+    // Buggy in versions of CiviCRM before 4.7.20.
+     civicrm_api3('Contribution', 'create', array(
+       'id' => $parentContributionId,
+       'contribution_status_id' => $newContributionStatus,
+     ));
   }
 
   /**
