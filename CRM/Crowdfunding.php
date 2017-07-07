@@ -128,10 +128,12 @@ class CRM_Crowdfunding {
    * In the case of a Crowd Funding custom field being updated, just recalculate
    * the amount.
    *
-   * @param int $parentContributeId
+   * @param int $parentContributionId
    */
-  public function onContributionCustomUpdate($parentContributeId) {
-    $this->refreshParentContributionStatus($parentContributeId);
+  public function onContributionCustomUpdate($parentContributionId) {
+    if (!empty($parentContributionId)) {
+      $this->refreshParentContributionStatus($parentContributionId);
+    }
   }
 
   /**

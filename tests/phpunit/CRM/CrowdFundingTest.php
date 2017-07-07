@@ -79,6 +79,23 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
     $this->assertEquals(CONTRIBUTION_STATUS_ID_COMPLETED, $newParentContributionStatus);
   }
 
+  public function testNormalContribution() {
+    $iDonor = civicrm_api3('Contact', 'create', array(
+      'contact_type' => 'Individual',
+      'email' => 'testdonor@example.org',
+    ));
+
+    $normalContributionResult = civicrm_api3('Contribution', 'create', array(
+      'sequential' => 1,
+      'total_amount' => '15.00',
+      'contact_id' => $iDonor['id'],
+      'contribution_status_id' => 'Completed',
+      'financial_type_id' => 'Donation',
+    ));
+
+    $this->assertEquals(0, $normalContributionResult['is_error']);
+  }
+
   /**
    * Test that event participations are updated when Parent Contributions Status
    * changes.
@@ -207,5 +224,4 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       'contribution_id' => $contribution['id'],
     );
   }
-
 }
