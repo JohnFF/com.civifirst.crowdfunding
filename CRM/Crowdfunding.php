@@ -5,9 +5,11 @@
  */
 class CRM_Crowdfunding {
   private $apiParentContributionIdFieldId;
+  private $apiAccumulatedFundsFieldId;
 
   public function __construct() {
-    $this->apiParentContributionIdFieldId = self::getApiFieldName();
+    $this->apiParentContributionIdFieldId = self::getApiFieldName('parent_contribution_id');
+    $this->apiAccumulatedFundsFieldId = self::getApiFieldName('accumulated_funds');
   }
 
   /**
@@ -46,7 +48,7 @@ class CRM_Crowdfunding {
     }
 
     // Update the Contribution's status.
-    $this->updateContributionStatus($parentContributionId, $newContributionStatus, $parentContributionDetails['total_amount']); // Bypasses an error with updating contribution statuses where the total amount is needed.
+    $this->updateContributionData($parentContributionId, $newContributionStatus, $childContributionsTotal);
 
     if ($newContributionStatus === 'Completed') {
       $this->onParentContributionComplete($parentContributionId);
@@ -59,12 +61,13 @@ class CRM_Crowdfunding {
    * @param string $newContributionStatus
    * @param float $totalAmount
    */
-  private function updateContributionStatus($parentContributionId, $newContributionStatus) {
+  private function updateContributionData($parentContributionId, $newContributionStatus, $newAccumulatedFunds) {
     // Buggy in versions of CiviCRM before 4.7.20.
-     civicrm_api3('Contribution', 'create', array(
-       'id' => $parentContributionId,
-       'contribution_status_id' => $newContributionStatus,
-     ));
+    civicrm_api3('Contribution', 'create', array(
+      'id' => $parentContributionId,
+      'contribution_status_id' => $newContributionStatus,
+      $this->apiAccumulatedFundsFieldId => $newAccumulatedFunds,
+    ));
   }
 
   /**
@@ -111,8 +114,6 @@ class CRM_Crowdfunding {
    * @param int $contributeId
    */
   public function onContributionUpdate($contributeId) {
-    $apiParentIdFieldName = self::getApiFieldName();
-
     $parentContributionId = civicrm_api3('Contribution', 'getvalue', array(
       'sequential' => 1,
       'return' => $this->apiParentContributionIdFieldId,
@@ -141,11 +142,11 @@ class CRM_Crowdfunding {
    *
    * @return string
    */
-  public static function getApiFieldName() {
+  public static function getApiFieldName($fieldKey) {
     $parentContributionIdFieldId = civicrm_api3('CustomField', 'getvalue', array(
       'sequential' => 1,
       'return' => 'id',
-      'name' => 'parent_contribution_id',
+      'name' => $fieldKey,
     ));
     return 'custom_' . $parentContributionIdFieldId;
   }

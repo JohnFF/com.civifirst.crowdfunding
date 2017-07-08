@@ -53,7 +53,7 @@
       <text_length>255</text_length>
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
-      <column_name>accumulated_funds_52</column_name>
+      <column_name>accumulated_funds</column_name>
       <in_selector>0</in_selector>
       <custom_group_name>Crowd_Funding_Details</custom_group_name>
     </CustomField>

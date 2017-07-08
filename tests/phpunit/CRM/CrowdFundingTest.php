@@ -56,7 +56,7 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       'contribution_status_id' => "Pending",
     ));
 
-    $apiFieldName = CRM_Crowdfunding::getApiFieldName();
+    $apiFieldName = CRM_Crowdfunding::getApiFieldName('parent_contribution_id');
 
     // Add enough payments to exceed the needed amount.
     for ($iPayment = 0; $iPayment < 3; $iPayment++) {
@@ -70,13 +70,15 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       ));
     }
 
-    $newParentContributionStatus = civicrm_api3('Contribution', 'getvalue', array(
+    $newParentContributionData = civicrm_api3('Contribution', 'getsingle', array(
       'sequential' => 1,
       'id' => $parentContribution['id'],
-      'return' => "contribution_status_id",
     ));
 
-    $this->assertEquals(CONTRIBUTION_STATUS_ID_COMPLETED, $newParentContributionStatus);
+    $accumulatedFundsFieldName = CRM_Crowdfunding::getApiFieldName('accumulated_funds');
+
+    $this->assertEquals(CONTRIBUTION_STATUS_ID_COMPLETED, $newParentContributionData['contribution_status_id']);
+    $this->assertEquals(15.00, $newParentContributionData[$accumulatedFundsFieldName]);
   }
 
   public function testNormalContribution() {
@@ -108,7 +110,7 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       'email' => 'testcollector@example.org',
     ));
 
-    $apiFieldName = CRM_Crowdfunding::getApiFieldName();
+    $apiFieldName = CRM_Crowdfunding::getApiFieldName('parent_contribution_id');
 
     // Add enough payments to exceed the needed amount.
     for ($iPayment = 0; $iPayment < 3; $iPayment++) {
@@ -130,6 +132,11 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
 
     $this->assertEquals(PARTICIPANT_STATUS_ID_REGISTERED, $newParticipantStatus);
 
+  }
+
+  public function testGetApiFieldName() {
+    $this->assertNotEquals('', CRM_Crowdfunding::getApiFieldName('parent_contribution_id'));
+    $this->assertNotEquals('', CRM_Crowdfunding::getApiFieldName('accumulated_funds'));
   }
 
   public static function createTestPaidParticipant() {
