@@ -4,12 +4,18 @@
  * This class encapsulates the Crowd Funding functionality.
  */
 class CRM_Crowdfunding {
+  const CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID = 'parent_contribution_id';
+  const CUSTOM_FIELD_NAME_ACCUMULATED_FUNDS = 'accumulated_funds';
+
   private $apiParentContributionIdFieldId;
   private $apiAccumulatedFundsFieldId;
 
+  /**
+   *
+   */
   public function __construct() {
-    $this->apiParentContributionIdFieldId = self::getApiFieldName('parent_contribution_id');
-    $this->apiAccumulatedFundsFieldId = self::getApiFieldName('accumulated_funds');
+    $this->apiParentContributionIdFieldId = self::getApiFieldName(self::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID);
+    $this->apiAccumulatedFundsFieldId = self::getApiFieldName(self::CUSTOM_FIELD_NAME_ACCUMULATED_FUNDS);
   }
 
   /**
@@ -90,7 +96,7 @@ class CRM_Crowdfunding {
    * @param int $parentContributionId
    * @return int $childContributionsTotal
    */
-  private function getChildContributionTotal($parentContributionId) {
+  public function getChildContributionTotal($parentContributionId) {
 
     $childContributions = civicrm_api3('Contribution', 'get', array(
       'sequential' => 1,
@@ -108,17 +114,21 @@ class CRM_Crowdfunding {
     return $childContributionsTotal;
   }
 
+  public function getParentContributionId($childContributionId) {
+    return civicrm_api3('Contribution', 'getvalue', array(
+      'sequential' => 1,
+      'return' => $this->apiParentContributionIdFieldId,
+      'id' => $childContributionId,
+    ));
+  }
+
   /**
    * When a Contribution is updated, use this functionality.
    *
    * @param int $contributeId
    */
-  public function onContributionUpdate($contributeId) {
-    $parentContributionId = civicrm_api3('Contribution', 'getvalue', array(
-      'sequential' => 1,
-      'return' => $this->apiParentContributionIdFieldId,
-      'id' => $contributeId,
-    ));
+  public function onContributionUpdate($childContributionId) {
+    $parentContributionId = $this->getParentContributionId($childContributionId);
 
     if (!empty($parentContributionId)) {
       $this->refreshParentContributionStatus($parentContributionId);
@@ -151,4 +161,19 @@ class CRM_Crowdfunding {
     return 'custom_' . $parentContributionIdFieldId;
   }
 
+  /**
+   *
+   * @param int $parentContributionId
+   */
+  public static function getParentContributionIdRemainingAmount($parentContributionId) {
+    $crowdfunding = new CRM_Crowdfunding();
+
+    $fullAmount = civicrm_api3('Contribution', 'getvalue', array(
+      'sequential' => 1,
+      'return' => "total_amount",
+      'id' => $parentContributionId,
+    ));
+
+    return $fullAmount - $crowdfunding->getChildContributionTotal($parentContributionId);
+  }
 }
