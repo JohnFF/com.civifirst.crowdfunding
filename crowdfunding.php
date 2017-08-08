@@ -177,7 +177,7 @@ function crowdfunding_civicrm_post($op, $objectName, $objectId, &$objectRef) {
       parse_str($parts['query'], $queryParameters);
 
       // If we have a valid field key, then update the new contribution with it.
-      if (array_key_exists($parentFieldKey, $queryParameters)) {
+      if (!array_key_exists($parentFieldKey, $queryParameters)) {
         return;
       }
       if (empty($queryParameters[$parentFieldKey])){
