@@ -160,13 +160,45 @@ function crowdfunding_civicrm_post($op, $objectName, $objectId, &$objectRef) {
     return;
   }
 
-  // Probably no need to fire on $op == 'create' as our custom fields won't exist then.
-  if (!in_array($op, array('edit', 'delete'))) {
-    return;
-  }
-
   $crowdfunding = new CRM_Crowdfunding();
-  $crowdfunding->onContributionUpdate($objectId);
+
+  switch ($op) {
+    case 'create':
+      if (empty($objectId)) {
+        return;
+      }
+
+      $parentFieldKey = $crowdfunding->getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID);
+
+      // Get field contribution's parent id from the referrer.
+      $parts = parse_url($_SERVER['HTTP_REFERER']);
+      filter_input(INPUT_SERVER, 'HTTP_REFERER', FILTER_SANITIZE_STRING);
+      $queryParameters = array();
+      parse_str($parts['query'], $queryParameters);
+
+      // If we have a valid field key, then update the new contribution with it.
+      if (array_key_exists($parentFieldKey, $queryParameters)) {
+        return;
+      }
+      if (empty($queryParameters[$parentFieldKey])){
+        return;
+      }
+
+      civicrm_api3('Contribution', 'create', array(
+        'id' => $objectId,
+         $parentFieldKey => $queryParameters[$parentFieldKey],
+      ));
+      break;
+
+    case 'edit':
+    case 'delete':
+      // Probably no need to fire on $op == 'create' as our custom fields won't exist then.
+      $crowdfunding->onContributionUpdate($objectId);
+      break;
+
+    default:
+      break;
+  }
 }
 
 /**
