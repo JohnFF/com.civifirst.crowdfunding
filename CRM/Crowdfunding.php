@@ -48,13 +48,13 @@ class CRM_Crowdfunding {
       $newContributionStatus = 'Completed';
     }
 
+    // Update the Contribution's status.
+    $this->updateContributionData($parentContributionId, $newContributionStatus, $childContributionsTotal);
+
     if ($newContributionStatus === $parentContributionDetails['contribution_status']) {
       // The Contribution's status hasn't changed, so updating here would throw the hook unnecessarily.
       return;
     }
-
-    // Update the Contribution's status.
-    $this->updateContributionData($parentContributionId, $newContributionStatus, $childContributionsTotal);
 
     if ($newContributionStatus === 'Completed') {
       $this->onParentContributionComplete($parentContributionId);
