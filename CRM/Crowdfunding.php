@@ -174,6 +174,8 @@ class CRM_Crowdfunding {
       'id' => $parentContributionId,
     ));
 
+    // TODO retrieve accumulated count instead of getChildContributionTotal.
+
     return $fullAmount - $crowdfunding->getChildContributionTotal($parentContributionId);
   }
 }

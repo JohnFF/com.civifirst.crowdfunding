@@ -153,6 +153,8 @@ function crowdfunding_civicrm_navigationMenu(&$menu) {
 /**
  * When Contributions are created, edited, or deleted, this can impact our goal.
  *
+ * Implements hook_civicrm_post.
+ *
  * @return void
  */
 function crowdfunding_civicrm_post($op, $objectName, $objectId, &$objectRef) {
@@ -191,8 +193,30 @@ function crowdfunding_civicrm_post($op, $objectName, $objectId, &$objectRef) {
       break;
 
     case 'edit':
-    case 'delete':
+      // case 'delete' takes place in pre hook, otherwise it's looking for info on a dead item.
       // Probably no need to fire on $op == 'create' as our custom fields won't exist then.
+      $crowdfunding->onContributionUpdate($objectId);
+      break;
+
+    default:
+      break;
+  }
+}
+
+/**
+ * Some actions need to take place before the item is deleted.
+ *
+ * Implements hook_civicrm_pre.
+ */
+function crowdfunding_civicrm_pre($op, $objectName, $objectId, &$objectRef) {
+  if ($objectName != 'Contribution') {
+    return;
+  }
+
+  $crowdfunding = new CRM_Crowdfunding();
+
+  switch ($op) {
+    case 'delete':
       $crowdfunding->onContributionUpdate($objectId);
       break;
 
