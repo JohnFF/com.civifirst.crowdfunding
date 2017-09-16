@@ -165,7 +165,7 @@ class CRM_Crowdfunding {
    *
    * @param int $parentContributionId
    */
-  public static function getParentContributionIdRemainingAmount($parentContributionId) {
+  public function getParentContributionIdRemainingAmount($parentContributionId) {
     $crowdfunding = new CRM_Crowdfunding();
 
     $fullAmount = civicrm_api3('Contribution', 'getvalue', array(
@@ -177,5 +177,32 @@ class CRM_Crowdfunding {
     // TODO retrieve accumulated count instead of getChildContributionTotal.
 
     return $fullAmount - $crowdfunding->getChildContributionTotal($parentContributionId);
+  }
+
+  public function setParentContributionIdOnFormSubmission($form) {
+    $parentFieldKey = $this->getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID);
+
+    // This isn't present on the first submission, but it is on the second.
+    if (!array_key_exists('contribution_id', $form->_values)) {
+      return;
+    }
+
+    // Get field contribution's parent id from the referrer.
+    $parts = parse_url(print_r(filter_input(INPUT_SERVER, 'HTTP_REFERER', FILTER_SANITIZE_STRING), TRUE));
+    $queryParameters = array();
+    parse_str($parts['query'], $queryParameters);
+
+    // If we have a valid field key, then update the new contribution with it.
+    if (!array_key_exists($parentFieldKey, $queryParameters)) {
+      return;
+    }
+    if (empty($queryParameters[$parentFieldKey])){
+      return;
+    }
+
+    civicrm_api3('Contribution', 'create', array(
+      'id' => $form->_values['contribution_id'],
+       $parentFieldKey => $queryParameters[$parentFieldKey],
+    ));
   }
 }

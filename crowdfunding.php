@@ -162,39 +162,13 @@ function crowdfunding_civicrm_post($op, $objectName, $objectId, &$objectRef) {
     return;
   }
 
-  $crowdfunding = new CRM_Crowdfunding();
-
   switch ($op) {
-    case 'create':
-      if (empty($objectId)) {
-        return;
-      }
-
-      $parentFieldKey = $crowdfunding->getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID);
-
-      // Get field contribution's parent id from the referrer.
-      $parts = parse_url($_SERVER['HTTP_REFERER']);
-      filter_input(INPUT_SERVER, 'HTTP_REFERER', FILTER_SANITIZE_STRING);
-      $queryParameters = array();
-      parse_str($parts['query'], $queryParameters);
-
-      // If we have a valid field key, then update the new contribution with it.
-      if (!array_key_exists($parentFieldKey, $queryParameters)) {
-        return;
-      }
-      if (empty($queryParameters[$parentFieldKey])){
-        return;
-      }
-
-      civicrm_api3('Contribution', 'create', array(
-        'id' => $objectId,
-         $parentFieldKey => $queryParameters[$parentFieldKey],
-      ));
-      break;
+    // No need for create, as this is handled in custom.
 
     case 'edit':
       // case 'delete' takes place in pre hook, otherwise it's looking for info on a dead item.
       // Probably no need to fire on $op == 'create' as our custom fields won't exist then.
+      $crowdfunding = new CRM_Crowdfunding();
       $crowdfunding->onContributionUpdate($objectId);
       break;
 
@@ -244,4 +218,14 @@ function crowdfunding_civicrm_custom($op, $groupID, $entityID, &$params) {
     $crowdfunding = new CRM_Crowdfunding();
     $crowdfunding->onContributionCustomUpdate($eachParam['value']);
   }
+}
+
+/**
+ *
+ * @param type $formName
+ * @param type $form
+ */
+function crowdfunding_civicrm_postProcess($formName, &$form) {
+  $crowdfunding = new CRM_Crowdfunding();
+  $crowdfunding->setParentContributionIdOnFormSubmission($form);
 }

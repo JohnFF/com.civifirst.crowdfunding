@@ -50,10 +50,10 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
 
     $parentContribution = civicrm_api3('Contribution', 'create', array(
       'sequential' => 1,
-      'financial_type_id' => "Event Fee",
-      'total_amount' => "15.00",
+      'financial_type_id' => 'Event Fee',
+      'total_amount' => '15.00',
       'contact_id' => $iCollector['id'],
-      'contribution_status_id' => "Pending",
+      'contribution_status_id' => 'Pending',
     ));
 
     $apiFieldName = CRM_Crowdfunding::getApiFieldName('parent_contribution_id');
@@ -62,7 +62,7 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
     for ($iPayment = 0; $iPayment < 3; $iPayment++) {
       civicrm_api3('Contribution', 'create', array(
         'sequential' => 1,
-        'total_amount' => "15.00",
+        'total_amount' => '5.00',
         'contact_id' => $iDonor['id'],
         $apiFieldName => $parentContribution['id'],
         'contribution_status_id' => 'Completed',
@@ -230,5 +230,52 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       'participant_id' => $participant['id'],
       'contribution_id' => $contribution['id'],
     );
+  }
+
+  public function testGetParentContributionIdRemainingAmount() {
+    $iCollector = civicrm_api3('Contact', 'create', array(
+      'contact_type' => 'Individual',
+      'email' => 'testcollector@example.org',
+    ));
+
+    $iDonor = civicrm_api3('Contact', 'create', array(
+      'contact_type' => 'Individual',
+      'email' => 'testdonor@example.org',
+    ));
+
+    $parentContribution = civicrm_api3('Contribution', 'create', array(
+      'sequential' => 1,
+      'financial_type_id' => 'Event Fee',
+      'total_amount' => '15.00',
+      'contribution_status_id' => 'Pending',
+      'contact_id' => $iCollector['id'],
+    ));
+
+    $apiFieldName = CRM_Crowdfunding::getApiFieldName('parent_contribution_id');
+
+    for ($iPayment = 0; $iPayment < 2; $iPayment++) {
+      civicrm_api3('Contribution', 'create', array(
+        'sequential' => 1,
+        'total_amount' => '5.00',
+        $apiFieldName => $parentContribution['id'],
+        'contribution_status_id' => 'Completed',
+        'financial_type_id' => 'Donation',
+        'contact_id' => $iDonor['id'],
+      ));
+    }
+
+    $crowdfunding = new CRM_Crowdfunding();
+    $this->assertEquals(5, $crowdfunding->getParentContributionIdRemainingAmount($parentContribution['id']));
+
+    civicrm_api3('Contribution', 'create', array(
+      'sequential' => 1,
+      'total_amount' => '5.00',
+      $apiFieldName => $parentContribution['id'],
+      'contribution_status_id' => 'Completed',
+      'financial_type_id' => 'Donation',
+      'contact_id' => $iDonor['id'],
+    ));
+
+    $this->assertEquals(0, $crowdfunding->getParentContributionIdRemainingAmount($parentContribution['id']));
   }
 }
