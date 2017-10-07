@@ -25,6 +25,15 @@ class CRM_Crowdfunding {
    */
   private function refreshParentContributionStatus($parentContributionId) {
 
+    if (empty($parentContributionId)) {
+      return;
+    }
+
+    if (!is_int($parentContributionId)) {
+      CRM_Core_Error::debug('Parent Contribution Id not an integer B' . print_r($parentContributionId, TRUE));
+      return;
+    }
+
     // See if the Parent Contribution's total amount is met by the Child Contributions.
     $parentContributionDetails = civicrm_api3('Contribution', 'getsingle', array(
       'sequential' => 1,
@@ -114,6 +123,12 @@ class CRM_Crowdfunding {
     return $childContributionsTotal;
   }
 
+  /**
+   * Returns the parent contribution id for a given child.
+   *
+   * @param type $childContributionId
+   * @return type
+   */
   public function getParentContributionId($childContributionId) {
     return civicrm_api3('Contribution', 'getvalue', array(
       'sequential' => 1,
@@ -129,10 +144,7 @@ class CRM_Crowdfunding {
    */
   public function onContributionUpdate($childContributionId) {
     $parentContributionId = $this->getParentContributionId($childContributionId);
-
-    if (!empty($parentContributionId)) {
-      $this->refreshParentContributionStatus($parentContributionId);
-    }
+    $this->refreshParentContributionStatus($parentContributionId);
   }
 
   /**
@@ -142,9 +154,7 @@ class CRM_Crowdfunding {
    * @param int $parentContributionId
    */
   public function onContributionCustomUpdate($parentContributionId) {
-    if (!empty($parentContributionId)) {
-      $this->refreshParentContributionStatus($parentContributionId);
-    }
+    $this->refreshParentContributionStatus($parentContributionId);
   }
 
   /**
@@ -170,7 +180,7 @@ class CRM_Crowdfunding {
 
     $fullAmount = civicrm_api3('Contribution', 'getvalue', array(
       'sequential' => 1,
-      'return' => "total_amount",
+      'return' => 'total_amount',
       'id' => $parentContributionId,
     ));
 
@@ -179,8 +189,11 @@ class CRM_Crowdfunding {
     return $fullAmount - $crowdfunding->getChildContributionTotal($parentContributionId);
   }
 
+  /**
+   *
+   * @param type $form
+   */
   public function setParentContributionIdOnFormSubmission($form) {
-    $parentFieldKey = $this->getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID);
 
     // This isn't present on the first submission, but it is on the second.
     if (!array_key_exists('contribution_id', $form->_values)) {
@@ -193,16 +206,20 @@ class CRM_Crowdfunding {
     parse_str($parts['query'], $queryParameters);
 
     // If we have a valid field key, then update the new contribution with it.
-    if (!array_key_exists($parentFieldKey, $queryParameters)) {
+    if (!array_key_exists($this->apiParentContributionIdFieldId, $queryParameters)) {
       return;
     }
-    if (empty($queryParameters[$parentFieldKey])){
+    if (empty($queryParameters[$this->apiParentContributionIdFieldId])){
+      return;
+    }
+    if (!is_int($queryParameters[$this->apiParentContributionIdFieldId])) {
+      CRM_Core_Error::debug('Parent Contribution Id not an integer A' . print_r($queryParameters[$this->apiParentContributionIdFieldId], TRUE));
       return;
     }
 
     civicrm_api3('Contribution', 'create', array(
       'id' => $form->_values['contribution_id'],
-       $parentFieldKey => $queryParameters[$parentFieldKey],
+       $this->apiParentContributionIdFieldId => $queryParameters[$this->apiParentContributionIdFieldId],
     ));
   }
 }
