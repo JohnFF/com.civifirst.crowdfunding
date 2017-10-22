@@ -10,7 +10,7 @@ use CRM_Crowdfunding_ExtensionUtil as E;
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC/API+Architecture+Standards
  */
 function _civicrm_api3_contribution_Refreshcrowdfundingdata_spec(&$spec) {
-  $spec['contribution']['api.required'] = 1;
+  $spec['id']['api.required'] = 1;
 }
 
 /**
