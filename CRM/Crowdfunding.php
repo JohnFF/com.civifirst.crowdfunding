@@ -23,7 +23,7 @@ class CRM_Crowdfunding {
    *
    * @param int $parentContributionId
    */
-  private function refreshParentContributionStatus($parentContributionId) {
+  public function refreshParentContributionStatus($parentContributionId) {
 
     if (empty($parentContributionId)) {
       return;
@@ -74,7 +74,7 @@ class CRM_Crowdfunding {
    *
    * @param int $parentContributionId
    * @param string $newContributionStatus
-   * @param float $totalAmount
+   * @param float $newAccumulatedFunds
    */
   private function updateContributionData($parentContributionId, $newContributionStatus, $newAccumulatedFunds) {
     // Buggy in versions of CiviCRM before 4.7.20.
@@ -103,7 +103,7 @@ class CRM_Crowdfunding {
 
   /**
    * @param int $parentContributionId
-   * @return int $childContributionsTotal
+   * @return float $childContributionsTotal
    */
   public function getChildContributionTotal($parentContributionId) {
 
@@ -126,8 +126,8 @@ class CRM_Crowdfunding {
   /**
    * Returns the parent contribution id for a given child.
    *
-   * @param type $childContributionId
-   * @return type
+   * @param int $childContributionId
+   * @return float
    */
   public function getParentContributionId($childContributionId) {
     return civicrm_api3('Contribution', 'getvalue', array(
@@ -140,7 +140,7 @@ class CRM_Crowdfunding {
   /**
    * When a Contribution is updated, use this functionality.
    *
-   * @param int $contributeId
+   * @param int $childContributionId
    */
   public function onContributionUpdate($childContributionId) {
     $parentContributionId = $this->getParentContributionId($childContributionId);
@@ -209,7 +209,7 @@ class CRM_Crowdfunding {
     if (!array_key_exists($this->apiParentContributionIdFieldId, $queryParameters)) {
       return;
     }
-    if (empty($queryParameters[$this->apiParentContributionIdFieldId])){
+    if (empty($queryParameters[$this->apiParentContributionIdFieldId])) {
       return;
     }
     if (!is_int($queryParameters[$this->apiParentContributionIdFieldId])) {
@@ -222,4 +222,5 @@ class CRM_Crowdfunding {
        $this->apiParentContributionIdFieldId => $queryParameters[$this->apiParentContributionIdFieldId],
     ));
   }
+
 }
