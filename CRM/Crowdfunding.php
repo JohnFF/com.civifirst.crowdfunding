@@ -196,7 +196,8 @@ class CRM_Crowdfunding {
   public function setParentContributionIdOnFormSubmission($form) {
 
     // This isn't present on the first submission, but it is on the second.
-    if (!array_key_exists('contribution_id', $form->_values)) {
+    $formValues = $form->get('values');
+    if (!array_key_exists('contribution_id', $formValues)) {
       return;
     }
 
