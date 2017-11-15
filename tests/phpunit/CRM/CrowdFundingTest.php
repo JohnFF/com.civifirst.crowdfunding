@@ -56,7 +56,7 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       'contribution_status_id' => 'Pending',
     ));
 
-    $apiFieldName = CRM_Crowdfunding::getApiFieldName('parent_contribution_id');
+    $apiFieldName = CRM_Crowdfunding::getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID);
 
     // Add enough payments to exceed the needed amount.
     for ($iPayment = 0; $iPayment < 3; $iPayment++) {
@@ -75,7 +75,7 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       'id' => $parentContribution['id'],
     ));
 
-    $accumulatedFundsFieldName = CRM_Crowdfunding::getApiFieldName('accumulated_funds');
+    $accumulatedFundsFieldName = CRM_Crowdfunding::getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_ACCUMULATED_FUNDS);
 
     $this->assertEquals(CONTRIBUTION_STATUS_ID_COMPLETED, $newParentContributionData['contribution_status_id']);
     $this->assertEquals(15.00, $newParentContributionData[$accumulatedFundsFieldName]);
@@ -135,8 +135,8 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
   }
 
   public function testGetApiFieldName() {
-    $this->assertNotEquals('', CRM_Crowdfunding::getApiFieldName('parent_contribution_id'));
-    $this->assertNotEquals('', CRM_Crowdfunding::getApiFieldName('accumulated_funds'));
+    $this->assertNotEquals('', CRM_Crowdfunding::getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID));
+    $this->assertNotEquals('', CRM_Crowdfunding::getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_ACCUMULATED_FUNDS));
   }
 
   public static function createTestPaidParticipant() {
@@ -251,7 +251,7 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
       'contact_id' => $iCollector['id'],
     ));
 
-    $apiFieldName = CRM_Crowdfunding::getApiFieldName('parent_contribution_id');
+    $apiFieldName = CRM_Crowdfunding::getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID);
 
     for ($iPayment = 0; $iPayment < 2; $iPayment++) {
       civicrm_api3('Contribution', 'create', array(
@@ -277,5 +277,43 @@ class CRM_CrowdFundingTest extends \PHPUnit_Framework_TestCase implements Headle
     ));
 
     $this->assertEquals(0, $crowdfunding->getParentContributionIdRemainingAmount($parentContribution['id']));
+  }
+
+  public function testCivicrmCustomUpdateHook() {
+    $iCollector = civicrm_api3('Contact', 'create', array(
+      'contact_type' => 'Individual',
+      'email' => 'testcollector@example.org',
+    ));
+
+    $parentContribution = civicrm_api3('Contribution', 'create', array(
+      'sequential' => 1,
+      'financial_type_id' => 'Event Fee',
+      'total_amount' => '15.00',
+      'contribution_status_id' => 'Pending',
+      'contact_id' => $iCollector['id'],
+    ));
+
+    $apiFieldName = CRM_Crowdfunding::getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_PARENT_CONTRIBUTION_ID);
+
+    $iDonor = civicrm_api3('Contact', 'create', array(
+      'contact_type' => 'Individual',
+      'email' => 'testdonor@example.org',
+    ));
+
+    civicrm_api3('Contribution', 'create', array(
+      'sequential' => 1,
+      'total_amount' => '5.00',
+      $apiFieldName => "" . $parentContribution['id'] . "",
+      'contribution_status_id' => 'Completed',
+      'financial_type_id' => 'Donation',
+      'contact_id' => $iDonor['id'],
+    ));
+
+    $crowdfunding = new CRM_Crowdfunding();
+    $crowdfunding->onContributionCustomUpdate("'" . $parentContribution['id'] . "'");
+
+    $parentContribution = civicrm_api3('contribution', 'getsingle', array('id' => $parentContribution['id']));
+
+    $this->assertEquals(5, $parentContribution[CRM_Crowdfunding::getApiFieldName(CRM_Crowdfunding::CUSTOM_FIELD_NAME_ACCUMULATED_FUNDS)]);
   }
 }

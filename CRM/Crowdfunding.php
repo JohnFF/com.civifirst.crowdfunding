@@ -23,14 +23,16 @@ class CRM_Crowdfunding {
    *
    * @param int $parentContributionId
    */
-  public function refreshParentContributionStatus($parentContributionId) {
+  public function refreshParentContributionStatus($rawParentContributionId) {
 
-    if (empty($parentContributionId)) {
+    if (empty($rawParentContributionId)) {
       return;
     }
 
-    if (!is_int($parentContributionId)) {
-      CRM_Core_Error::debug('Parent Contribution Id not an integer B' . print_r($parentContributionId, TRUE));
+    $parentContributionId = filter_var($rawParentContributionId, FILTER_SANITIZE_NUMBER_INT);
+
+    if ($parentContributionId == 0) {
+      CRM_Core_Error::debug('Parent Contribution Id not an integer B' . print_r($rawParentContributionId, TRUE));
       return;
     }
 
