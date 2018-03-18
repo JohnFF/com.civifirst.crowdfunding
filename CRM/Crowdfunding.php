@@ -21,7 +21,7 @@ class CRM_Crowdfunding {
   /**
    * This updates the parent Contribution's status with the new data.
    *
-   * @param int $parentContributionId
+   * @param int $rawParentContributionId
    */
   public function refreshParentContributionStatus($rawParentContributionId) {
 
@@ -59,13 +59,25 @@ class CRM_Crowdfunding {
       $newContributionStatus = 'Completed';
     }
 
-    // Update the Contribution's status.
-    $this->updateContributionData($parentContributionId, $newContributionStatus, $childContributionsTotal);
+    $this->updateContributionAccumulatedFunds($parentContributionId, $childContributionsTotal);
 
     if ($newContributionStatus === $parentContributionDetails['contribution_status']) {
       // The Contribution's status hasn't changed, so updating here would throw the hook unnecessarily.
       return;
     }
+
+    if ($parentContributionDetails['contribution_status'] == 'Completed') {
+      CRM_Core_Error::debug_log_message('An attempt to update the status when it\'s already completed.');
+      return;
+    }
+
+    if ($parentContributionDetails['contribution_status'] == 'Partially paid' && $newContributionStatus == 'Pending') {
+      CRM_Core_Error::debug_log_message('An attempt to downgrade the status when it\'s already partially paid.');
+      return;
+    }
+
+    // Update the Contribution's status.
+    $this->updateContributionStatus($parentContributionId, $newContributionStatus);
 
     if ($newContributionStatus === 'Completed') {
       $this->onParentContributionComplete($parentContributionId);
@@ -76,13 +88,24 @@ class CRM_Crowdfunding {
    *
    * @param int $parentContributionId
    * @param string $newContributionStatus
-   * @param float $newAccumulatedFunds
    */
-  private function updateContributionData($parentContributionId, $newContributionStatus, $newAccumulatedFunds) {
+  private function updateContributionStatus($parentContributionId, $newContributionStatus) {
     // Buggy in versions of CiviCRM before 4.7.20.
     civicrm_api3('Contribution', 'create', array(
       'id' => $parentContributionId,
       'contribution_status_id' => $newContributionStatus,
+    ));
+  }
+
+  /**
+   *
+   * @param int $parentContributionId
+   * @param float $newAccumulatedFunds
+   */
+  private function updateContributionAccumulatedFunds($parentContributionId, $newAccumulatedFunds) {
+    // Buggy in versions of CiviCRM before 4.7.20.
+    civicrm_api3('Contribution', 'create', array(
+      'id' => $parentContributionId,
       $this->apiAccumulatedFundsFieldId => $newAccumulatedFunds,
     ));
   }
