@@ -244,7 +244,7 @@ class CRM_Crowdfunding {
     }
 
     civicrm_api3('Contribution', 'create', array(
-      'id' => $form->_values['contribution_id'],
+      'id' => intval($form->_values['contribution_id']),
        $this->apiParentContributionIdFieldId => $queryParameters[$this->apiParentContributionIdFieldId],
     ));
   }
