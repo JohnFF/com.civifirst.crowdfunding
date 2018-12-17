@@ -1,7 +1,5 @@
 # com.civifirst.crowdfunding
-CiviCRM's CrowdFunding extension: Contributions now have a parent Contribution ID that is updated as child Contributions are.
-
-Provides a 'Parent Contribution Id' for Contributions. This is ued to updates Parent Contribution statuses when their Child Contributions are completed. 
+CiviCRM's CrowdFunding extension: Contributions now have a parent Contribution ID and a "funds accumulated" field. The amount collected on this parent Contribution is updated as Contributions with that parent are submitted. When the full amount is raised the parent contribution's status is updated (pending, partially paid, completed). Any evnet participations relying on that status change are also updated.
 
 To use this: 
 1. Create a profile containing the Crowd Funding custom fields.
